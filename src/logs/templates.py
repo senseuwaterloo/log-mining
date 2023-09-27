@@ -69,18 +69,17 @@ class TemplateVariable(TemplateBase):
     name: str
     type: str
 
-    def __init__(self, store: PatternStore, name: str, type: str):
+    def __init__(self, store: PatternStore, type: str):
         if type not in store:
             raise UndefinedPatternType(type)
         self.store = store
-        self.name = name
         self.type = type
 
     def __str__(self):
         return self.__repr__()
 
     def __repr__(self):
-        return f"<var name={self.name} type={self.type}>{self.regex}</var>"
+        return f"<var type={self.type}/>"
 
     @property
     def regex(self):

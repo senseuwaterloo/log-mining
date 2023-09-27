@@ -3,11 +3,21 @@ from itertools import chain
 from typing import Generator
 from logs.templates import Template, TemplateBase, TemplateTree, TemplateVariable
 
+
 @dataclass
 class Parameter:
     event: "Event"
     index: int
     variable: TemplateVariable
+
+    @property
+    def value(self):
+        return self.event.values[self.index]
+
+    @value.setter
+    def setvalue(self, value):
+        self.event.values[self.index] = value
+
 
 @dataclass
 class Event:

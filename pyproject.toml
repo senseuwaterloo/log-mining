@@ -13,7 +13,10 @@ authors = [
   { name = "bolu", email = "bolu@bolupi.me" },
 ]
 dependencies = [
-  "hyperscan"
+  "hyperscan",
+  "google-re2",
+  "xarray",
+  "scipy"
 ]
 
 [project.urls]

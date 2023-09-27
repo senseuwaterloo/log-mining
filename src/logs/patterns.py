@@ -1,3 +1,6 @@
+from typing import Iterable, Iterator
+
+
 class UndefinedPatternType(RuntimeError):
     pass
 
@@ -22,3 +25,6 @@ class PatternStore:
 
     def __contains__(self, type: str) -> bool:
         return type in self.patterns
+
+    def __iter__(self) -> Iterator[tuple[str, str]]:
+        return iter(self.patterns.items())
