@@ -1,18 +1,19 @@
 from dataclasses import dataclass
 from itertools import chain
-from typing import Any, Generator, Iterator, Sequence
+from typing import Generator
 from logs.templates import Template, TemplateBase, TemplateTree, TemplateVariable
 
 @dataclass
 class Parameter:
+    event: "Event"
+    index: int
     variable: TemplateVariable
-    value: str
 
 @dataclass
 class Event:
     id: int
     template: Template
-    values: Sequence[str]
+    values: list[str]
 
     @property
     def parameters(self):
@@ -26,4 +27,4 @@ class Event:
                     return
                 case _:
                     return
-        return list(map(lambda v: Parameter(*v), zip(itervars(self.template), self.values)))
+        return list(map(lambda v: Parameter(self, *v), enumerate(itervars(self.template))))

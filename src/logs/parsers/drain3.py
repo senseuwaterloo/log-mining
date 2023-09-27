@@ -11,6 +11,7 @@ from logs.event import Event
 from logs.templates import Template, TemplateBase, TemplateStatic, TemplateVariable
 from logs.patterns import PatternStore
 from string import ascii_letters, digits
+from operator import itemgetter
 
 
 class UnmatchedParameters(RuntimeError):
@@ -26,8 +27,11 @@ def parser(sample: Iterable[str] | None=None, mask:bool = False, shuffle: bool =
 
     varset: Dict[Tuple[int, int], Set[ExtractedParameter]] = defaultdict(set)
 
+    templates: dict[int, Template] = {}
+
     patterns = PatternStore()
-    patterns['any'] = '.*'
+    patterns["*"] = ".*"
+    patterns["0"] = ".*"
 
     def fuzzy(text: Iterable[str]) -> Generator[str, None, None]:
         for part in text:
@@ -41,29 +45,27 @@ def parser(sample: Iterable[str] | None=None, mask:bool = False, shuffle: bool =
     def mkparts(template: str, types: Sequence[str]) -> Generator[TemplateBase, None, None]:
         head, *tail = template.split("<*>")
         if len(tail) != len(types):
-            raise UnmatchedParameters
+            raise UnmatchedParameters(f"{template} {types}")
         yield TemplateStatic(head)
-        for part, part_type in zip(tail, types):
-            if mask:
-                yield TemplateVariable(patterns, part_type, "any")
-            else:
-                yield TemplateVariable(patterns, part_type, part_type)
+        for part, type in zip(tail, types):
+            yield TemplateVariable(patterns, type, type)
             yield TemplateStatic(part)
 
-    def mktemplate(result, types: Sequence[str]):
-        return Template(*mkparts(result["template_mined"], types))
+    def mktemplate(id, template: str, types: Sequence[str]):
+        templates[id] = Template(*mkparts(template, types))
+        return templates[id]
 
-
-    def mkevent(result):
-        params = miner.extract_parameters(result["template_mined"], line.strip(), exact_matching=False)
-        types, values = zip(*((p.mask_name, p.value) for p in params or []))
-        template = mktemplate(result['template_mined'], types)
-        return Event(result['cluster_id'], template, values)
+    def mkevent(id: int, template: str, line: str):
+        params = miner.extract_parameters(template, line.strip(), exact_matching=False)
+        if not params:
+            return Event(id, mktemplate(id, template, []), [])
+        types, values = zip(*((p.mask_name, p.value) for p in params))
+        return Event(id, mktemplate(id, template, types), list(values))
         
-
+    extract = itemgetter("cluster_id", "template_mined")
     def parse(line: str) -> Event:
-        result = miner.add_log_message(line)
-        return mkevent(result)
+        id, template = extract(miner.add_log_message(line))
+        return mkevent(id, template, line)
 
     return parse
         
@@ -79,5 +81,8 @@ if __name__ == '__main__':
     argparser.add_argument("file", nargs='?', type=FileType('r'), default=sys.stdin)
     args = argparser.parse_args()
     parse = parser([], mask=args.mask, shuffle=args.shuffle, fuzz=args.fuzz, varset_size=args.varset_size)
-    for line in args.file:
-        print(repr(parse(line)))
+    try:
+        for line in args.file:
+            print(repr(parse(line)))
+    except KeyboardInterrupt:
+        pass

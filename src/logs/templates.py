@@ -4,7 +4,7 @@ from re import Pattern
 import re
 from typing import Sequence
 
-from logs.patterns import PatternStore
+from logs.patterns import PatternStore, UndefinedPatternType
 
 class TemplateBase(ABC):
     @abstractmethod
@@ -44,7 +44,7 @@ class Template(TemplateTree):
         super().__init__(*parts)
         
     def __repr__(self):
-        return f"<template id={id(self)}>{super().__repr__()}</template>"
+        return f"<template>{super().__repr__()}</template>"
 
 
 class TemplateStatic(TemplateBase):
@@ -65,11 +65,13 @@ class TemplateStatic(TemplateBase):
 
 
 class TemplateVariable(TemplateBase):
+    store : PatternStore
     name: str
     type: str
-    store : PatternStore
 
     def __init__(self, store: PatternStore, name: str, type: str):
+        if type not in store:
+            raise UndefinedPatternType(type)
         self.store = store
         self.name = name
         self.type = type
@@ -78,7 +80,7 @@ class TemplateVariable(TemplateBase):
         return self.__repr__()
 
     def __repr__(self):
-        return f"<var id={id(self)} name={self.name} type={self.type}>{self.regex}</var>"
+        return f"<var name={self.name} type={self.type}>{self.regex}</var>"
 
     @property
     def regex(self):
