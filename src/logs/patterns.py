@@ -1,0 +1,1 @@
+PatternStore = dict[str, str]
