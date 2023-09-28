@@ -26,14 +26,13 @@ def parser(sample: Iterable[str] | None=None):
     miner = TemplateMiner(config=config)
     if sample is not None:
         for line in sample:
-            miner.add_log_message(line)
+            miner.add_log_message(line.strip())
 
     templates: dict[int, Template] = {}
 
 
     patterns = PatternStore()
     patterns["email"] = r"([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x22([^\x0d\x22\x5c\x80-\xff]|\x5c[\x00-\x7f])*\x22))*\x40([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d)(\x2e([^\x00-\x20\x22\x28\x29\x2c\x2e\x3a-\x3c\x3e\x40\x5b-\x5d\x7f-\xff]+|\x5b([^\x0d\x5b-\x5d\x80-\xff]|\x5c[\x00-\x7f])*\x5d))*"
-    patterns["phone"] = r"\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
     patterns["mac"] = r"(?:[a-zA-Z0-9]{2}[:-]){5}[a-zA-Z0-9]{2}"
     patterns["ipv4"] = r"(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
     patterns["ipv6"] = r"((([0-9A-Fa-f]{1,4}:){1,6}:)|(([0-9A-Fa-f]{1,4}:){7}))([0-9A-Fa-f]{1,4})"
@@ -43,7 +42,7 @@ def parser(sample: Iterable[str] | None=None):
 
     patterns["*"] = ".*"
 
-    def mkparts(template: str, types: Sequence[str]) -> Generator[TemplateBase, None, None]:
+    def mkparts(template: str, types: Sequence[str]) -> Generator[TemplateVariable | TemplateStatic, None, None]:
         head, *tail = re.split(r"<var type=[\w*]*/>", template)
         if len(tail) != len(types):
             raise UnmatchedParameters(f"{template} {types}")
@@ -68,9 +67,9 @@ def parser(sample: Iterable[str] | None=None):
 
     def parse(line: str, train=False) -> Event:
         if train:
-            id, template = itemgetter("cluster_id", "template_mined")(miner.add_log_message(line))
+            id, template = itemgetter("cluster_id", "template_mined")(miner.add_log_message(line.strip()))
         else:
-            id, template = extract(miner.match(line))
+            id, template = extract(miner.match(line.strip(), full_search_strategy="fallback"))
         return mkevent(id, template, line)
 
     return parse

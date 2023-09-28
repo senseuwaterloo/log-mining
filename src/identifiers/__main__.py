@@ -64,7 +64,7 @@ def main(files, output):
     for event in map(parse, lines):
         for parameter in event.parameters:
             parameter.value = str(datasets[(parameter.event.id, parameter.variable.position)].sample(1).item())
-        print(event.text, file=output)
+        print(event.text.strip(), file=output)
 
 
 if __name__ == "__main__":
