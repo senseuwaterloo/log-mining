@@ -1,22 +1,21 @@
 from dataclasses import dataclass
 from itertools import chain
 from typing import Generator
-from logs.templates import Template, TemplateBase, TemplateTree, TemplateVariable
+from logs.templates import Template, TemplateBase, TemplateStatic, TemplateTree, TemplateVariable
 
 
 @dataclass
 class Parameter:
     event: "Event"
-    index: int
     variable: TemplateVariable
 
     @property
-    def value(self):
-        return self.event.values[self.index]
+    def value(self) -> str:
+        return self.event.values[self.variable.position]
 
     @value.setter
-    def setvalue(self, value):
-        self.event.values[self.index] = value
+    def value(self, v: str):
+        self.event.values[self.variable.position] = v
 
 
 @dataclass
@@ -37,4 +36,16 @@ class Event:
                     return
                 case _:
                     return
-        return list(map(lambda v: Parameter(self, *v), enumerate(itervars(self.template))))
+        return list(map(lambda v: Parameter(self, v), itervars(self.template)))
+
+    @property
+    def text(self):
+        def stringify(node: TemplateTree | TemplateStatic | TemplateVariable) -> str:
+            match node:
+                case TemplateTree():
+                    return "".join(map(stringify, node.parts))
+                case TemplateStatic():
+                    return str(node)
+                case TemplateVariable():
+                    return self.values[node.position]
+        return stringify(self.template)

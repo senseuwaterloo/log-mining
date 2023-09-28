@@ -48,8 +48,8 @@ def parser(sample: Iterable[str] | None=None):
         if len(tail) != len(types):
             raise UnmatchedParameters(f"{template} {types}")
         yield TemplateStatic(head)
-        for part, type in zip(tail, types):
-            yield TemplateVariable(patterns, type)
+        for position, (part, type) in enumerate(zip(tail, types)):
+            yield TemplateVariable(patterns, position, type)
             yield TemplateStatic(part)
 
     def mktemplate(id, template: str, types: Sequence[str]):

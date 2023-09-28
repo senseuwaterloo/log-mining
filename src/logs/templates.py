@@ -21,10 +21,50 @@ class TemplateBase(ABC):
         ...
 
 
-class TemplateTree(TemplateBase):
-    parts: Sequence[TemplateBase]
+class TemplateStatic(TemplateBase):
+    content: str
 
-    def __init__(self, *parts: TemplateBase):
+    def __init__(self, content: str):
+        self.content = content
+
+    def __str__(self):
+        return self.content
+
+    def __repr__(self):
+        return str(self)
+
+    @property
+    def regex(self) -> str:
+        return re.escape(self.content)
+
+
+class TemplateVariable(TemplateBase):
+    store : PatternStore
+    position: int
+    type: str
+
+    def __init__(self, store: PatternStore, position:int, type: str):
+        if type not in store:
+            raise UndefinedPatternType(type)
+        self.store = store
+        self.position = position
+        self.type = type
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return f"<var type={self.type}/>"
+
+    @property
+    def regex(self):
+        return self.store[self.type]
+
+
+class TemplateTree(TemplateBase):
+    parts: Sequence["TemplateTree | TemplateStatic | TemplateVariable"]
+
+    def __init__(self, *parts: "TemplateTree | TemplateStatic | TemplateVariable"):
         self.parts = parts
 
     def __str__(self):
@@ -45,42 +85,3 @@ class Template(TemplateTree):
         
     def __repr__(self):
         return f"<template>{super().__repr__()}</template>"
-
-
-class TemplateStatic(TemplateBase):
-    content: str
-
-    def __init__(self, content: str):
-        self.content = content
-
-    def __str__(self):
-        return self.content
-
-    def __repr__(self):
-        return str(self)
-
-    @property
-    def regex(self) -> str:
-        return re.escape(self.content)
-
-
-class TemplateVariable(TemplateBase):
-    store : PatternStore
-    name: str
-    type: str
-
-    def __init__(self, store: PatternStore, type: str):
-        if type not in store:
-            raise UndefinedPatternType(type)
-        self.store = store
-        self.type = type
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        return f"<var type={self.type}/>"
-
-    @property
-    def regex(self):
-        return self.store[self.type]
