@@ -7,6 +7,8 @@ import numpy as np
 
 from numpy.typing import NDArray
 from scipy.stats import gaussian_kde
+from tqdm import tqdm
+from itertools import chain
 
 
 class Distribution:
@@ -50,18 +52,18 @@ def mkdatasets(events: Iterable[Event]):
     return {index: Distribution(values) for index, values in datasets.items()}
 
 
-def mklines(files: Sequence[TextIO]) -> Generator[str, None, None]:
-    for file in files:
-        yield from file
+def main(trainfiles: list[TextIO], files: list[TextIO], output: TextIO):
+    train, parse = parser()
 
+    if len(trainfiles) <= 0:
+        raise RuntimeError("no training files")
 
+    lines = list(chain(*trainfiles))
+    datasets = mkdatasets(tqdm(map(train, lines), total=len(lines), desc="training"))
 
-def main(files, output):
-    lines = list(mklines(files))
-    parse = parser(lines)
-    events = list(map(parse, lines))
-    datasets = mkdatasets(events)
-    for event in map(parse, lines):
+    for line in chain(*files):
+        if (event:=parse(line)) is None:
+            raise RuntimeError(f"{line} can not be parsed")
         for parameter in event.parameters:
             parameter.value = str(datasets[(parameter.event.id, parameter.variable.position)].sample(1).item())
         print(event.text.strip(), file=output)
@@ -71,7 +73,8 @@ if __name__ == "__main__":
     import argparse
     import sys
     argparser = argparse.ArgumentParser()
+    argparser.add_argument("--train", type=argparse.FileType("r"), nargs="*", default=[])
     argparser.add_argument("files", type=argparse.FileType("r"), nargs="*", default=[sys.stdin])
     argparser.add_argument("output", type=argparse.FileType("w"), nargs="?", default=sys.stdout)
     ns = argparser.parse_args()
-    main(ns.files, ns.output)
+    main(ns.train, ns.files, ns.output)

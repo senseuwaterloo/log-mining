@@ -16,7 +16,8 @@ dependencies = [
   "hyperscan",
   "google-re2",
   "xarray",
-  "scipy"
+  "scipy",
+  "tqdm"
 ]
 
 [project.urls]
