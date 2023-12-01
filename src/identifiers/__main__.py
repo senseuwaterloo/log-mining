@@ -1,9 +1,15 @@
+# TODO: Fix this for more portability sake
+import sys
+sys.path.insert(0,sys.path[0] + "\\..")
+
 from collections import defaultdict
 from typing import Any, Callable, Generator, Iterable, Sequence, TextIO
-from logs.event import Event, Parameter
-from logs.parsers.drain3 import parser
 
 import numpy as np
+import logging as log
+
+from logs.event import Event, Parameter
+from logs.parsers.drain3_test import parser
 
 from numpy.typing import NDArray
 from scipy.stats import gaussian_kde
