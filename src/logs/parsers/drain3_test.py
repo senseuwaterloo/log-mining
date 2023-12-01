@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0,sys.path[0] + "\\..\\..")
+
 from argparse import ArgumentParser, FileType
 import sys
 from typing import Any, Callable, Generator, Iterable, Iterator, Optional, Sequence
