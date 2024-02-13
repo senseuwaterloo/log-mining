@@ -48,7 +48,7 @@ def mkdatasets(events: Iterable[Event]):
     datasets = defaultdict(list)
     for event in events:
         for parameter in event.parameters:
-            datasets[(event.id, parameter.variable.position)] += [parameter]
+            datasets[(event.id, parameter.position)] += [parameter]
     return {index: Distribution(values) for index, values in datasets.items()}
 
 
@@ -65,7 +65,7 @@ def main(trainfiles: list[TextIO], files: list[TextIO], output: TextIO):
         if (event:=parse(line)) is None:
             raise RuntimeError(f"{line} can not be parsed")
         for parameter in event.parameters:
-            parameter.value = str(datasets[(parameter.event.id, parameter.variable.position)].sample(1).item())
+            parameter.value = str(datasets[(parameter.event.id, parameter.position)].sample(1).item())
         print(event.text.strip(), file=output)
 
 
