@@ -7,7 +7,7 @@ from drain3.masking import MaskingInstruction
 from drain3.template_miner_config import TemplateMinerConfig
 from logs.event import Event
 
-from logs.templates import Template, TemplateBase, TemplateStatic, TemplateVariable
+from logs.templates import Template, TemplatePart, TemplateStatic, TemplateVariable
 from logs.patterns import PatternStore
 
 import re
@@ -33,13 +33,13 @@ def parser():
 
     miner = TemplateMiner(config=config)
 
-    def mkparts(template: str, types: Sequence[str]) -> Generator[TemplateVariable | TemplateStatic, None, None]:
+    def mkparts(template: str, types: Sequence[str]) -> Generator[TemplatePart, None, None]:
         head, *tail = re.split(r"<.*?>", template)
         if len(tail) != len(types):
             raise UnmatchedParameters(f"{types} {template}")
         yield TemplateStatic(head)
-        for position, (part, type) in enumerate(zip(tail, types)):
-            yield TemplateVariable(patterns, position, type)
+        for part, type in zip(tail, types):
+            yield TemplateVariable(type)
             yield TemplateStatic(part)
 
     def mktemplate(template: str, types: Sequence[str]):
