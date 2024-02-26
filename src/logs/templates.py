@@ -54,11 +54,17 @@ def treecata[A, B](f: Callable[[A], B], g: Callable[[list[B]], B], tree: Tree[A]
         return f(tree)
     return g([treecata(f, g, t) for t in tree])
 
+
+def _yield_leaf[A](leaf: A) -> Iterator[A]:
+    yield leaf
+
+def _yield_branch[A](branch: list[Iterator[A]]) -> Iterator[A]:
+    for i in branch:
+        yield from i
+
 def treeiter[A](tree: Tree[A]) -> Iterator[A]:
-    if isinstance(tree, list):
-        for t in tree:
-            yield from treeiter(t)
-    yield cast(A, tree)
+    return treecata(_yield_leaf, _yield_branch, tree)
+
 
 @dataclass(eq=True, frozen=True)
 class Template:
