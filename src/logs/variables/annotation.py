@@ -20,6 +20,7 @@ LABEL_MAP = {
     "d": "date",
     "h": "phone",
     "n": "name",
+    "v": "value",
     "o": "other"
 }
 
@@ -72,7 +73,7 @@ class Dataset:
                     else:
                         parts.append(event.values[k])
                     k += 1
-        string = "".join(parts)
+        string = f"{i} " + "".join(parts)
         while True:
             try:
                 print(string, end=" ")
