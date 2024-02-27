@@ -12,12 +12,15 @@ keywords = []
 authors = [
   { name = "bolu", email = "bolu@bolupi.me" },
 ]
+requires-python = ">= 3.12"
 dependencies = [
   "hyperscan",
   "google-re2",
   "xarray",
   "scipy",
-  "tqdm"
+  "tqdm",
+  "lxml",
+  "drain3",
 ]
 
 [project.urls]

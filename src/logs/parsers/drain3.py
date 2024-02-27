@@ -1,13 +1,13 @@
 from argparse import ArgumentParser, FileType
 import sys
-from typing import Any, Callable, Generator, Iterable, Iterator, Optional, Sequence
+from typing import Iterator, Optional, Sequence
 from drain3 import TemplateMiner
 from drain3.drain import LogCluster
 from drain3.masking import MaskingInstruction
 from drain3.template_miner_config import TemplateMinerConfig
 from logs.event import Event
 
-from logs.templates import Template, TemplatePart, TemplateStatic, TemplateVariable
+from logs.templates import Template, TemplatePart, Variable
 from logs.patterns import PatternStore
 
 import re
@@ -33,17 +33,17 @@ def parser():
 
     miner = TemplateMiner(config=config)
 
-    def mkparts(template: str, types: Sequence[str]) -> Generator[TemplatePart, None, None]:
+    def mkparts(template: str, types: Sequence[str]) -> Iterator[TemplatePart]:
         head, *tail = re.split(r"<.*?>", template)
         if len(tail) != len(types):
             raise UnmatchedParameters(f"{types} {template}")
-        yield TemplateStatic(head)
+        yield head
         for part, type in zip(tail, types):
-            yield TemplateVariable(type)
-            yield TemplateStatic(part)
+            yield Variable(type)
+            yield part
 
     def mktemplate(template: str, types: Sequence[str]):
-        return Template(*mkparts(template, types))
+        return Template([*mkparts(template, types)])
 
     def mkevent(id: int, template: str, line: str):
         params = miner.extract_parameters(template, line)
