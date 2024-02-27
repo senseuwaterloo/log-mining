@@ -59,7 +59,6 @@ class Dataset:
         raise RuntimeError("failed to match template with content", template_string, template.regex, content)
 
     def task(self, i, j):
-        print(self.labels)
         event = self.events[i]
         parts = []
         k = 0
