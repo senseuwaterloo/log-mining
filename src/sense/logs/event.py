@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from functools import cached_property
-from logs.templates import Template, Variable
+
+from .templates import Template, Variable
 
 
-@dataclass(slots=True, frozen=True)
+@dataclass(slots=True)
 class Parameter:
     event: "Event"
     position: int
@@ -14,7 +15,7 @@ class Parameter:
         return self.event.values[self.position]
 
     @value.setter
-    def setvalue(self, value: str) -> None:
+    def value(self, value: str) -> None:
         self.event.values[self.position] = value
 
 
@@ -26,7 +27,10 @@ class Event:
 
     @cached_property
     def parameters(self):
-        return [Parameter(self, i, v) for i, v in enumerate(v for v in self.template if isinstance(v, Variable))]
+        return [
+            Parameter(self, i, v)
+            for i, v in enumerate(v for v in self.template if isinstance(v, Variable))
+        ]
 
     @cached_property
     def text(self):
@@ -39,5 +43,5 @@ class Event:
                     case Variable():
                         yield self.values[i]
                         i += 1
-        return "".join(parts())
 
+        return "".join(parts())

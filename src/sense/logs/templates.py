@@ -1,4 +1,3 @@
-from argparse import ArgumentError
 from dataclasses import dataclass
 from typing import Callable, Iterator, Union
 from lxml import etree
@@ -20,7 +19,7 @@ class Variable:
     def __repr__(self):
         if self.pattern == DEFAULT_VARIABLE_PATTERN:
             return "<var/>"
-        return f"<var pattern=\"{self.pattern}\"/>"
+        return f'<var pattern="{self.pattern}"/>'
 
 
 type TemplatePart = str | Variable
@@ -34,17 +33,20 @@ class Template:
     def from_xml(string: str):
         parser = etree.XMLParser(recover=True)
         root = etree.fromstring(string, parser=parser)
+
         def iter_etree(e):
             yield e.text or ""
             for child in e:
                 yield from_etree(child)
                 yield child.tail or ""
+
         def from_etree(e):
             match e.tag:
                 case "template":
                     return Template(list(iter_etree(e)))
                 case "var":
                     return Variable(e.get("pattern") or DEFAULT_VARIABLE_PATTERN)
+
         template = from_etree(root)
         if not isinstance(template, Template):
             raise RuntimeError("input is not a valid template string")

@@ -1,9 +1,11 @@
 from ..event import Event
 from ..templates import Template, Variable
 
-
 import csv
 import sys
+import argparse
+
+from pathlib import Path
 
 
 LABEL_MAP = {
@@ -21,8 +23,9 @@ LABEL_MAP = {
     "h": "phone",
     "n": "name",
     "v": "value",
-    "o": "other"
+    "o": "other",
 }
+
 
 class Dataset:
     save_path: str
@@ -47,8 +50,6 @@ class Dataset:
                         self.labels.append(row.split(","))
         except FileNotFoundError:
             pass
-                
-
 
     def add(self, template_string: str, content: str):
         template = Template.from_xml(template_string)
@@ -56,8 +57,13 @@ class Dataset:
             event = Event(len(self.events), template, [*m.groups()])
             self.events.append(event)
             return
-            
-        raise RuntimeError("failed to match template with content", template_string, template.regex, content)
+
+        raise RuntimeError(
+            "failed to match template with content",
+            template_string,
+            template.regex,
+            content,
+        )
 
     def task(self, i, j):
         event = self.events[i]
@@ -92,13 +98,18 @@ class Dataset:
                         self.labels[i].append(self.task(i, len(self.labels[i])))
         finally:
             with open(self.save_path, "w") as f:
-                f.writelines(",".join(l) + "\n" for l in self.labels)
-
+                f.writelines(",".join(label) + "\n" for label in self.labels)
 
 
 def main(*argv):
-    ds = Dataset(*argv[1:])
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument("dataset", type=Path, help="path to the dataset to label")
+    argparser.add_argument("output", type=Path, help="path to the output labels")
+    ns = argparser.parse_args(argv[1:])
+
+    ds = Dataset(ns.dataset, ns.output)
     ds.label_all()
+
 
 if __name__ == "__main__":
     try:

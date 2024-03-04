@@ -17,7 +17,7 @@ from operator import itemgetter
 
 class UnmatchedParameters(RuntimeError):
     pass
-    
+
 
 def parser():
     config = TemplateMinerConfig()
@@ -57,21 +57,23 @@ def parser():
 
     def parse(line: str) -> Optional[Event]:
         line = line.strip()
-        if match := miner.match(line, full_search_strategy="fallback") is not None:
+        if (match := miner.match(line, full_search_strategy="fallback")) is not None:
             id, template = extract(match)
             return mkevent(id, template, line)
 
     def train(line: str):
         line = line.strip()
-        id, template = itemgetter("cluster_id", "template_mined")(miner.add_log_message(line))
+        id, template = itemgetter("cluster_id", "template_mined")(
+            miner.add_log_message(line)
+        )
         return mkevent(id, template, line)
 
     return train, parse
 
-    
+
 def main():
     argparser = ArgumentParser()
-    argparser.add_argument("file", nargs='?', type=FileType('r'), default=sys.stdin)
+    argparser.add_argument("file", nargs="?", type=FileType("r"), default=sys.stdin)
     args = argparser.parse_args()
     train, _ = parser()
     try:
@@ -81,5 +83,5 @@ def main():
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
