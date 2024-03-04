@@ -1,4 +1,4 @@
-from typing import Iterable, Iterator
+from typing import Iterator
 
 
 class UndefinedPatternType(RuntimeError):
